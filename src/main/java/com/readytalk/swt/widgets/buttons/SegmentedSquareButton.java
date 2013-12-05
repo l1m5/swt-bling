@@ -122,6 +122,7 @@ public class SegmentedSquareButton extends Canvas {
     for(SegmentedSquareButtonItem item : items) {
       this.items.add(item);
     }
+    initializeSegments();
   }
 
 
@@ -333,8 +334,61 @@ public class SegmentedSquareButton extends Canvas {
   }
 
 
+  void initializeSegments() {
+    /*
+     * Three cases:
+     *  1) Segment only (easiest to calculate)
+     *  2) Two Segments (no center)
+     *  3) More than two (left, center ... , right)
+     */
+
+    if(items.size() == 1) {
+      items.get(0).setSegmentType(SegmentType.SINGLE);
+    } else {
+      // cases 2 and 3
+      items.get(0).setSegmentType(SegmentType.LEFT_END);
+      items.get(items.size() - 1).setSegmentType(SegmentType.RIGHT_END);
+
+      for(int i = 1; i < (items.size() - 1); i++) {
+        SegmentedSquareButtonItem item = items.get(i);
+        item.setSegmentType(SegmentType.CENTER);
+      }
+    }
+  }
+
   protected void paintSegment(SegmentedSquareButtonItem item) {
 
+  }
+
+  Point computeSize() {
+    /*
+     * Height should be constant... either it gets maxed out or we use the suggested height
+     */
+    int maxHeight = heightHint;
+    int width = 0;
+
+    /*
+     * If a new height comes up, we need to go back and re-adjust size for the others..
+     */
+    int indexOfNewMaxHeight = -1;
+    int currentIdex = 0;
+    for(SegmentedSquareButtonItem item : items) {
+      Point size = item.computeSegmentSize(maxHeight);
+      if(size.y > maxHeight) {
+        maxHeight = size.y;
+        indexOfNewMaxHeight = currentIdex;
+      }
+      width += size.x;
+      currentIdex++;
+    }
+
+    if(indexOfNewMaxHeight != -1) {
+      for(int i = 0; i < indexOfNewMaxHeight; i++) {
+        items.get(i).computeSegmentSize(maxHeight);
+      }
+    }
+
+    return new Point(maxHeight, width);
   }
 
 
@@ -346,14 +400,14 @@ public class SegmentedSquareButton extends Canvas {
       defaultCurrentFontColor = defaultFontColor;
     }
 
-    Point buttonSize = computeSize();
+    Point segmentSize = computeSize();
 
     // with certain layouts, the width is sometimes 1 pixel too wide
-    if (buttonSize.x > getClientArea().width) {
-      buttonSize.x = getClientArea().width;
+    if (segmentSize.x > getClientArea().width) {
+      segmentSize.x = getClientArea().width;
     }
 
-    Rectangle buttonRectangle = new Rectangle(0, 0, buttonSize.x, buttonSize.y);
+    Rectangle segmentRectangle = new Rectangle(0, 0, segmentSize.x, segmentSize.y);
 
     GC gc = paintEvent.gc;
 
@@ -367,11 +421,16 @@ public class SegmentedSquareButton extends Canvas {
       log.warning("Couldn't get nice fonts: " + exception.getMessage());
     }
 
+    SegmentedSquareButtonItem lastItem = null;
+    for(SegmentedSquareButtonItem item : items) {
+      item.paintControl(lastItem, paintEvent);
+    }
+
     // add transparency by making the canvas background the same as
     // the parent background (only needed for rounded corners)
     if (roundedCorners) {
       gc.setBackground(getParent().getBackground());
-      gc.fillRectangle(buttonRectangle);
+      gc.fillRectangle(segmentRectangle);
     }
 
     // draw the background color of the inside of the button. There's no such
@@ -462,6 +521,18 @@ public class SegmentedSquareButton extends Canvas {
 
   }
 
+
+  SegmentedSquareButtonItem findItemBy(Point point) {
+    SegmentedSquareButtonItem item = null;
+
+    for(SegmentedSquareButtonItem i : items) {
+      if(i.getRectangle().contains(point)) {
+        item = i;
+        break;
+      }
+    }
+    return item;
+  }
 
 
   Point computeSegmentSize(SegmentedSquareButtonItem item) {
@@ -1331,8 +1402,12 @@ public class SegmentedSquareButton extends Canvas {
       mouseExit();
     }
 
-    Point computeSegmentSize() {
-      return computeSegmentSize(SWT.DEFAULT, SWT.DEFAULT, false);
+    Point computeSegmentOrigin(SegmentedSquareButtonItem itemToTheLeft) {
+
+    }
+
+    Point computeSegmentSize(int heightHint) {
+      return computeSegmentSize(SWT.DEFAULT, heightHint, false);
     }
 
     public Point computeSegmentSize(int widthHint, int heightHint, boolean changed) {
@@ -1597,6 +1672,10 @@ public class SegmentedSquareButton extends Canvas {
       Point imageOrigin = (image != null) ? new Point(imageX, imageY) : null;
       Point textOrigin = (text != null) ? new Point(textX, textY) : null;
       return new ContentOriginSet(imageOrigin, textOrigin);
+    }
+
+    void paintControl(SegmentedSquareButtonItem lastItem, PaintEvent paintEvent) {
+
     }
 
     void setSegmentType(SegmentType segmentType) {
