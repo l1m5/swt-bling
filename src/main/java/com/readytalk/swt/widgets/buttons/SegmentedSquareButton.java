@@ -17,6 +17,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
@@ -69,7 +70,7 @@ import java.util.logging.Logger;
  *
  */
 
-public class SegmentedSquareButton extends SquareButton {
+public class SegmentedSquareButton extends Canvas {
   protected static final Logger log = Logger.getLogger(SquareButton.class.getName());
 
   protected ArrayList<SegmentedSquareButtonItem> items = new ArrayList<SegmentedSquareButtonItem>();
@@ -88,6 +89,7 @@ public class SegmentedSquareButton extends SquareButton {
   protected int innerMarginHeight = 4;
   protected int borderWidth = 1;
   protected int imagePadding = 5; //5;
+  protected int heightHint;
   protected boolean roundedCorners = true;
   protected int cornerRadius = 5;
   protected boolean selectionBorder = false;
@@ -100,7 +102,7 @@ public class SegmentedSquareButton extends SquareButton {
   public static final int BG_IMAGE_FIT = 4;
   protected int backgroundImageStyle = 0;
 
-  public enum ImagePosition {
+  enum ImagePosition {
     ABOVE_TEXT,
     BELOW_TEXT,
     RIGHT_OF_TEXT,
@@ -109,9 +111,10 @@ public class SegmentedSquareButton extends SquareButton {
 
   protected HashMap<String, Color> colorRegistry = new HashMap<String, Color>();
 
-  protected SegmentedSquareButton(Composite parent, int style, SegmentedSquareButtonItem ... items) {
+  public SegmentedSquareButton(Composite parent, int style, int heightHint, SegmentedSquareButtonItem ... items) {
     super(parent, style | SWT.NO_BACKGROUND);
     this.setBackgroundMode(SWT.INHERIT_DEFAULT);
+    this.heightHint = heightHint;
 
     setDefaultColors();
     addListeners();
@@ -449,297 +452,20 @@ public class SegmentedSquareButton extends SquareButton {
     }
   }
 
-  /**
-   * for LEFT_OF_TEXT and RIGHT_OF_TEXT
-   *    widthOfContents = image.width + image.padding
-   *                             + text.width
-   * for ABOVE_TEXT
-   *  widthOfContents = Math.max(image.width, text.width)
-   * @return
-   */
-  protected int getWidthOfContents(SegmentedSquareButtonItem item) {
-    int widthOfContents = 0;
 
-    Point textSize = computeTextSize(item);
-    Point imageSize = computeImageSize(item);
 
-    int textWidth = (textSize != null) ? textSize.x : 0;
-    int imageWidth = (imageSize != null) ? imageSize.x : 0;
+  int totalLength() {
 
-    switch(imagePosition) {
-      case LEFT_OF_TEXT:
-      case RIGHT_OF_TEXT:
-        widthOfContents = imageWidth + imagePadding + textWidth;
-        break;
-      case ABOVE_TEXT:
-        widthOfContents = Math.max(textWidth, imageWidth);
-        break;
-    }
-    return widthOfContents;
   }
 
-  /**
-   * for LEFT_OF_TEXT and RIGHT_OF_TEXT
-   *  heightOfContents = Math.max(textHeight, imageHeight);
-   *
-   * for ABOVE_TEXT
-   *  heightOfContents = imageHeight + imagePadding + textHeight
-   * @return
-   */
-  protected int getHeightOfContents(SegmentedSquareButtonItem item) {
-    int heightOfContents = 0;
+  int totalHeight() {
 
-    Point textSize = computeTextSize();
-    Point imageSize = computeImageSize();
-
-    int textHeight = (textSize != null) ? textSize.y : 0;
-    int imageHeight = (imageSize != null) ? imageSize.y : 0;
-
-    switch(imagePosition) {
-      case LEFT_OF_TEXT:
-      case RIGHT_OF_TEXT:
-        heightOfContents = Math.max(textHeight, imageHeight);
-        break;
-      case ABOVE_TEXT:
-        heightOfContents = imageHeight + imagePadding + textHeight;
-        break;
-    }
-    return heightOfContents;
-  }
-
-  /**
-   * Trying to consolidate this for sanity's sake.
-   *
-   * @return
-   */
-  protected ContentOriginSet getContentsOrigin(Rectangle rectangle) {
-    int imageX, imageY, textX, textY;
-    imageX = imageY = textX = textY = 0;
-    Point textSize = computeTextSize();
-    if(textSize == null) {
-      textSize = new Point(0,0);
-    }
-    Point imageSize = computeImageSize();
-    if(imageSize == null) {
-      imageSize = new Point(0,0);
-    }
-
-    boolean imageWider = imageSize.x > textSize.x;
-    boolean imageTaller = imageSize.y > textSize.y;
-
-    int widthOfContents = getWidthOfContents();
-    int heightOfContents = getHeightOfContents();
-      /*
-       * For clarity's sake remember a few things... we depend on the button
-       * rectangle being sized at this point, which will take into account the
-       * inner margin values (which we point out here for clarity's sake).
-       *
-       * The functions that calculate the width and height of contents change
-       * how that is done based on the three possible configurations of a button.
-       *
-       * Typically, text will be wider than images, but shorter in height.  However,
-       * this won't always be true which is why the getWidthOfContents and getHeightOfContents
-       * will use a Math.max call to determine which one is taller in the cases where they may be different.
-       */
-
-    switch (imagePosition) {
-      case LEFT_OF_TEXT:
-        /*
-         * LEFT_OF_TEXT
-         *           1. innerMarginWidth
-         *           2. innerMarginHeight
-         *           3. image.width
-         *           4. image.height
-         *           5. image.padding
-         *           6. text.width
-         *           7. text.height
-         *  ________________________________________
-         *  |           ^                           |
-         *  |           2                           |
-         *  |           |                           |
-         *  |      ########### ^                    |
-         *  |      #         # |                    |
-         *  |<--1-># ^     ^ # |   <----6-----><-1->|
-         *  |      #         # 4   CEREAL BAWX  ^   |
-         *  |      #   ~~~   #<-5->BEFORE I GET 7   |
-         *  |      #         # |   ANGRY!!!     |   |
-         *  |      ########### |                    |
-         *  |      <-3--^---->                      |
-         *  |           2                           |
-         *  |           |                           |
-         *  |_______________________________________|
-         */
-
-        imageX = (horizontallyCenterContents) ? rectangle.width/2 - widthOfContents/2 : innerMarginWidth;
-        textX = imageX + imageSize.x + imagePadding;
-
-        // anchor height based on the image, if the image is the taller of the two... BUT that might not always be the case
-        if(imageTaller) {
-          imageY = (verticallyCenterContents) ? rectangle.height/2 - imageSize.y/2 : innerMarginHeight;
-          textY = imageY + imageSize.y/2 - textSize.y/2;
-        } else {
-          textY = (verticallyCenterContents) ? rectangle.height/2 - textSize.y/2 : innerMarginHeight;
-          imageY = textY + textSize.y/2 - imageSize.y/2;
-        }
-
-        break;
-      case RIGHT_OF_TEXT:
-        /*  RIGHT_OF_TEXT
-         *           1. innerMarginWidth
-         *           2. innerMarginHeight
-         *           3. image.width
-         *           4. image.height
-         *           5. image.padding
-         *           6. text.width
-         *           7. text.height
-         *  ________________________________________
-         *  |                            ^          |
-         *  |                            2          |
-         *  |                            |          |
-         *  |                       ########### ^   |
-         *  |                       #         # |   |
-         *  |<--1-><----6-----><-5-># ^     ^ #<-1->|
-         *  |      CEREAL BAWX  ^   #         # 4   |
-         *  |      BEFORE I GET 7   #   ~~~   # |   |
-         *  |      ANGRY!!!     |   #         # |   |
-         *  |                       ########### |   |
-         *  |                       <-3--^---->     |
-         *  |                            2          |
-         *  |                            |          |
-         *  |_______________________________________|
-         */
-        textX = (horizontallyCenterContents) ? rectangle.width/2 - widthOfContents/2 : innerMarginWidth;
-        imageX = textX + textSize.x + imagePadding;
-
-        // anchor height based on the image, if the image is the taller of the two... BUT that might not always be the case
-        if(imageTaller) {
-          imageY = (verticallyCenterContents) ? rectangle.height/2 - imageSize.y/2 : innerMarginHeight;
-          textY = imageY + imageSize.y/2 - textSize.y/2;
-        } else {
-          textY = (verticallyCenterContents) ? rectangle.height/2 - textSize.y/2 : innerMarginHeight;
-          imageY = textY + textSize.y/2 - imageSize.y/2;
-        }
-        break;
-      case ABOVE_TEXT:
-        /*  ABOVE_TEXT
-         *           1. innerMarginWidth (Whichever is wider, the image or the text)
-         *           2. innerMarginHeight
-         *           3. image.width
-         *           4. image.height
-         *           5. image.padding
-         *           6. text.width
-         *           7. text.height
-         *  ___________________________
-         *  |            ^            |
-         *  |            2            |
-         *  |            |            |
-         *  |       ########### ^     |
-         *  |       #         # |     |
-         *  |       # ^     ^ # |     |
-         *  |       #         # 4     |
-         *  |       #   ~~~   # |     |
-         *  |       #         # |     |
-         *  |       ########### |     |
-         *  |<--1--><-3--^---->       |
-         *  |            |            |
-         *  |   O        5            |
-         *  |   R        |            |
-         *  |            |            |
-         *  |<--1-><--6--|----><--1-->|
-         *  |      CEREAL BAWX  ^     |
-         *  |      BEFORE I GET 7     |
-         *  |      ANGRY!!!     |     |
-         *  |                         |
-         *  |                         |
-         *  |                         |
-         *  |                         |
-         *  |_________________________|
-         */
-        imageY = (verticallyCenterContents) ? rectangle.height/2 - heightOfContents/2 : innerMarginHeight;
-        textY = imageY + imageSize.y + imagePadding;
-
-        // anchor width based on the image only if the image is wider, probably not likely but possible
-        if(imageWider) {
-          imageX = (horizontallyCenterContents) ? rectangle.width/2 - imageSize.x/2 : innerMarginWidth;
-          textX = imageX + imageSize.x/2 - textSize.x/2;
-        } else {
-          textX = (horizontallyCenterContents) ? rectangle.width/2 - textSize.x/2 : innerMarginWidth;
-          imageX = textX + textSize.x/2 - imageSize.x/2;
-        }
-        break;
-    }
-    Point imageOrigin = (image != null) ? new Point(imageX, imageY) : null;
-    Point textOrigin = (text != null) ? new Point(textX, textY) : null;
-    return new ContentOriginSet(imageOrigin, textOrigin);
-  }
-
-  protected void drawText(GC gc, int x, int y) {
-    gc.setFont(defaultFont);
-    gc.setForeground(defaultCurrentFontColor);
-    gc.drawText(text, x, y, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
   }
 
 
-  protected int drawImage(GC gc, int x, int y) {
-    if (image == null)
-      return x;
-    gc.drawImage(image, x, y);
-    return x + image.getBounds().width + imagePadding;
-  }
 
-
-  protected void drawBackgroundImage(GC gc, Rectangle rect) {
-    if (backgroundImage == null)
-      return;
-
-    Rectangle imgBounds = backgroundImage.getBounds();
-
-    if (backgroundImageStyle == BG_IMAGE_STRETCH) {
-      gc.drawImage(backgroundImage, 0, 0, imgBounds.width, imgBounds.height, rect.x, rect.y, rect.width, rect.height);
-
-    } else if (backgroundImageStyle == BG_IMAGE_CENTER) {
-      int x = (imgBounds.width - rect.width) / 2;
-      int y = (imgBounds.height - rect.height) / 2;
-      Rectangle centerRect = new Rectangle(rect.x, rect.y, rect.width, rect.height);
-      if (x < 0) {
-        centerRect.x -= x;
-        x = 0;
-      }
-      if (y < 0) {
-        centerRect.y -= y;
-        y = 0;
-      }
-      drawClippedImage(gc, backgroundImage, x, y, centerRect);
-
-    } else if (backgroundImageStyle == BG_IMAGE_TILE) {
-      for (int y = 0; y < rect.height; y += imgBounds.height) {
-        Rectangle tileRect = new Rectangle(rect.x, y + rect.y, rect.width, rect.height-y);
-
-        for (int x = 0; x < rect.width; x += imgBounds.width) {
-          tileRect.x += drawClippedImage(gc, backgroundImage, 0, 0, tileRect);
-          tileRect.width -= x;
-        }
-      }
-
-    } else {
-      // default is BG_IMAGE_CROP
-      drawClippedImage(gc, backgroundImage, 0, 0, rect);
-    }
-  }
-
-  protected int drawClippedImage(GC gc, Image image, int x, int y, Rectangle rect) {
-    if (image != null) {
-      Rectangle imageBounds = image.getBounds();
-      int width = Math.min(imageBounds.width - x, rect.width);
-      int height = Math.min(imageBounds.height - y, rect.height);
-      gc.drawImage(image, x, y, width, height, rect.x, rect.y, width, height);
-      return width;
-    }
-    return 0;
-  }
-
-  public Point computeSegmentSize(SegmentedSquareButtonItem item) {
-    return computeSize(item, SWT.DEFAULT, SWT.DEFAULT, false);
+  Point computeSegmentSize(SegmentedSquareButtonItem item) {
+    return computeSegmentSize(item, SWT.DEFAULT, SWT.DEFAULT, false);
   }
 
   public Point computeSegmentSize(SegmentedSquareButtonItem item, int widthHint, int heightHint, boolean changed) {
@@ -1146,39 +872,49 @@ public class SegmentedSquareButton extends SquareButton {
     return item;
   }
 
-  private enum SegmentStyle {
+  enum SegmentStyle {
     TEXT_ONLY,
     IMAGE_ONLY,
     IMAGE_AND_TEXT,
     BLANK
   }
 
-  public abstract class SegmentedSquareButtonItem {
-    private String text;
-    protected Image image, backgroundImage;
-    private String toolTip;
-    private String accesibilityName;
-    private Rectangle rectangle;
-    private SegmentStyle segmentStyle;
+  enum SegmentType {
+    LEFT_END,
+    RIGHT_END,
+    CENTER,
+    SINGLE
+  }
 
-    protected Font font;
-    protected Color fontColor, hoverFontColor, clickedFontColor, inactiveFontColor, selectedFontColor;
-    protected Color borderColor, hoverBorderColor, clickedBorderColor, inactiveBorderColor, selectedBorderColor;
-    protected Color currentColor, currentColor2, currentFontColor, currentBorderColor;
-    protected Color backgroundColor, backgroundColor2;
-    protected Color clickedColor, clickedColor2;
-    protected Color hoverColor, hoverColor2;
-    protected Color inactiveColor, inactiveColor2;
-    protected Color selectedColor, selectedColor2;
+  public class SegmentedSquareButtonItem {
+    String text;
+    Image image, backgroundImage;
+    String toolTip;
+    String accesibilityName;
+    Rectangle rectangle;
+    SegmentStyle segmentStyle;
+    SegmentType segmentType;
+
+    int lastWidth, lastHeight;
+
+    Font font;
+    Color fontColor, hoverFontColor, clickedFontColor, inactiveFontColor, selectedFontColor;
+    Color borderColor, hoverBorderColor, clickedBorderColor, inactiveBorderColor, selectedBorderColor;
+    Color currentColor, currentColor2, currentFontColor, currentBorderColor;
+    Color backgroundColor, backgroundColor2;
+    Color clickedColor, clickedColor2;
+    Color hoverColor, hoverColor2;
+    Color inactiveColor, inactiveColor2;
+    Color selectedColor, selectedColor2;
 
     boolean isFocused = false;
 
-    protected ImagePosition imagePosition = ImagePosition.LEFT_OF_TEXT;
+    ImagePosition imagePosition = ImagePosition.LEFT_OF_TEXT;
 
-    protected boolean horizontallyCenterContents = false;
-    protected boolean verticallyCenterContents = true;
+    boolean horizontallyCenterContents = false;
+    boolean verticallyCenterContents = true;
 
-    protected void checkSettings() {
+    void checkSettings() {
       if(text != null && image != null) {
         segmentStyle = SegmentStyle.IMAGE_AND_TEXT;
       } else if(text != null && image == null) {
@@ -1595,6 +1331,346 @@ public class SegmentedSquareButton extends SquareButton {
       mouseExit();
     }
 
+    Point computeSegmentSize() {
+      return computeSegmentSize(SWT.DEFAULT, SWT.DEFAULT, false);
+    }
+
+    public Point computeSegmentSize(int widthHint, int heightHint, boolean changed) {
+      Point size = null;
+      if ((widthHint == SWT.DEFAULT) && (heightHint == SWT.DEFAULT) && !changed &&
+        (lastWidth > 0) && (lastHeight > 0)) {
+        size = new Point(lastWidth, lastHeight);
+      } else {
+        int width = (widthHint != SWT.DEFAULT) ? widthHint : getWidthOfContents() + (innerMarginWidth * 2);
+        int height = (heightHint != SWT.DEFAULT) ? heightHint : getHeightOfContents() + (innerMarginHeight * 2);
+
+      /*
+       * In this case, it's possible that the background image will be small and
+       * your text will get junky... careful with this one, kid.
+       */
+        if ((backgroundImage != null) && (backgroundImageStyle == BG_IMAGE_FIT)) {
+          width = backgroundImage.getBounds().width;
+          height = backgroundImage.getBounds().height;
+        }
+
+        lastWidth = width + 2;
+        lastHeight = height + 2;
+        size = new Point(lastWidth, lastHeight);
+      }
+      return size;
+    }
+
+    Point computeTextSize(SegmentedSquareButtonItem item) {
+      Point size = null;
+      if (item.getText() != null) {
+        GC gc = new GC(SegmentedSquareButton.this);
+        gc.setFont(defaultFont);
+        size = gc.textExtent(text, SWT.DRAW_DELIMITER);
+        gc.dispose();
+      }
+      return size;
+    }
+
+    Point computeImageSize(SegmentedSquareButtonItem item) {
+      Point size = null;
+      if(item.getImage() != null) {
+        Rectangle imageBounds = image.getBounds();
+        size = new Point(imageBounds.width, imageBounds.height);
+      }
+      return size;
+    }
+
+    /**
+     * for LEFT_OF_TEXT and RIGHT_OF_TEXT
+     *    widthOfContents = image.width + image.padding
+     *                             + text.width
+     * for ABOVE_TEXT
+     *  widthOfContents = Math.max(image.width, text.width)
+     * @return
+     */
+    int getWidthOfContents(SegmentedSquareButtonItem item) {
+      int widthOfContents = 0;
+
+      Point textSize = computeTextSize(item);
+      Point imageSize = computeImageSize(item);
+
+      int textWidth = (textSize != null) ? textSize.x : 0;
+      int imageWidth = (imageSize != null) ? imageSize.x : 0;
+
+      switch(imagePosition) {
+        case LEFT_OF_TEXT:
+        case RIGHT_OF_TEXT:
+          widthOfContents = imageWidth + imagePadding + textWidth;
+          break;
+        case ABOVE_TEXT:
+          widthOfContents = Math.max(textWidth, imageWidth);
+          break;
+      }
+      return widthOfContents;
+    }
+
+    /**
+     * for LEFT_OF_TEXT and RIGHT_OF_TEXT
+     *  heightOfContents = Math.max(textHeight, imageHeight);
+     *
+     * for ABOVE_TEXT
+     *  heightOfContents = imageHeight + imagePadding + textHeight
+     * @return
+     */
+    int getHeightOfContents(SegmentedSquareButtonItem item) {
+      int heightOfContents = 0;
+
+      Point textSize = computeTextSize();
+      Point imageSize = computeImageSize();
+
+      int textHeight = (textSize != null) ? textSize.y : 0;
+      int imageHeight = (imageSize != null) ? imageSize.y : 0;
+
+      switch(imagePosition) {
+        case LEFT_OF_TEXT:
+        case RIGHT_OF_TEXT:
+          heightOfContents = Math.max(textHeight, imageHeight);
+          break;
+        case ABOVE_TEXT:
+          heightOfContents = imageHeight + imagePadding + textHeight;
+          break;
+      }
+      return heightOfContents;
+    }
+
+    ContentOriginSet getContentsOrigin(Rectangle rectangle) {
+      int imageX, imageY, textX, textY;
+      imageX = imageY = textX = textY = 0;
+      Point textSize = computeTextSize();
+      if(textSize == null) {
+        textSize = new Point(0,0);
+      }
+      Point imageSize = computeImageSize();
+      if(imageSize == null) {
+        imageSize = new Point(0,0);
+      }
+
+      boolean imageWider = imageSize.x > textSize.x;
+      boolean imageTaller = imageSize.y > textSize.y;
+
+      int widthOfContents = getWidthOfContents();
+      int heightOfContents = getHeightOfContents();
+      /*
+       * For clarity's sake remember a few things... we depend on the button
+       * rectangle being sized at this point, which will take into account the
+       * inner margin values (which we point out here for clarity's sake).
+       *
+       * The functions that calculate the width and height of contents change
+       * how that is done based on the three possible configurations of a button.
+       *
+       * Typically, text will be wider than images, but shorter in height.  However,
+       * this won't always be true which is why the getWidthOfContents and getHeightOfContents
+       * will use a Math.max call to determine which one is taller in the cases where they may be different.
+       */
+
+      switch (imagePosition) {
+        case LEFT_OF_TEXT:
+        /*
+         * LEFT_OF_TEXT
+         *           1. innerMarginWidth
+         *           2. innerMarginHeight
+         *           3. image.width
+         *           4. image.height
+         *           5. image.padding
+         *           6. text.width
+         *           7. text.height
+         *  ________________________________________
+         *  |           ^                           |
+         *  |           2                           |
+         *  |           |                           |
+         *  |      ########### ^                    |
+         *  |      #         # |                    |
+         *  |<--1-># ^     ^ # |   <----6-----><-1->|
+         *  |      #         # 4   CEREAL BAWX  ^   |
+         *  |      #   ~~~   #<-5->BEFORE I GET 7   |
+         *  |      #         # |   ANGRY!!!     |   |
+         *  |      ########### |                    |
+         *  |      <-3--^---->                      |
+         *  |           2                           |
+         *  |           |                           |
+         *  |_______________________________________|
+         */
+
+          imageX = (horizontallyCenterContents) ? rectangle.width/2 - widthOfContents/2 : innerMarginWidth;
+          textX = imageX + imageSize.x + imagePadding;
+
+          // anchor height based on the image, if the image is the taller of the two... BUT that might not always be the case
+          if(imageTaller) {
+            imageY = (verticallyCenterContents) ? rectangle.height/2 - imageSize.y/2 : innerMarginHeight;
+            textY = imageY + imageSize.y/2 - textSize.y/2;
+          } else {
+            textY = (verticallyCenterContents) ? rectangle.height/2 - textSize.y/2 : innerMarginHeight;
+            imageY = textY + textSize.y/2 - imageSize.y/2;
+          }
+
+          break;
+        case RIGHT_OF_TEXT:
+        /*  RIGHT_OF_TEXT
+         *           1. innerMarginWidth
+         *           2. innerMarginHeight
+         *           3. image.width
+         *           4. image.height
+         *           5. image.padding
+         *           6. text.width
+         *           7. text.height
+         *  ________________________________________
+         *  |                            ^          |
+         *  |                            2          |
+         *  |                            |          |
+         *  |                       ########### ^   |
+         *  |                       #         # |   |
+         *  |<--1-><----6-----><-5-># ^     ^ #<-1->|
+         *  |      CEREAL BAWX  ^   #         # 4   |
+         *  |      BEFORE I GET 7   #   ~~~   # |   |
+         *  |      ANGRY!!!     |   #         # |   |
+         *  |                       ########### |   |
+         *  |                       <-3--^---->     |
+         *  |                            2          |
+         *  |                            |          |
+         *  |_______________________________________|
+         */
+          textX = (horizontallyCenterContents) ? rectangle.width/2 - widthOfContents/2 : innerMarginWidth;
+          imageX = textX + textSize.x + imagePadding;
+
+          // anchor height based on the image, if the image is the taller of the two... BUT that might not always be the case
+          if(imageTaller) {
+            imageY = (verticallyCenterContents) ? rectangle.height/2 - imageSize.y/2 : innerMarginHeight;
+            textY = imageY + imageSize.y/2 - textSize.y/2;
+          } else {
+            textY = (verticallyCenterContents) ? rectangle.height/2 - textSize.y/2 : innerMarginHeight;
+            imageY = textY + textSize.y/2 - imageSize.y/2;
+          }
+          break;
+        case ABOVE_TEXT:
+        /*  ABOVE_TEXT
+         *           1. innerMarginWidth (Whichever is wider, the image or the text)
+         *           2. innerMarginHeight
+         *           3. image.width
+         *           4. image.height
+         *           5. image.padding
+         *           6. text.width
+         *           7. text.height
+         *  ___________________________
+         *  |            ^            |
+         *  |            2            |
+         *  |            |            |
+         *  |       ########### ^     |
+         *  |       #         # |     |
+         *  |       # ^     ^ # |     |
+         *  |       #         # 4     |
+         *  |       #   ~~~   # |     |
+         *  |       #         # |     |
+         *  |       ########### |     |
+         *  |<--1--><-3--^---->       |
+         *  |            |            |
+         *  |   O        5            |
+         *  |   R        |            |
+         *  |            |            |
+         *  |<--1-><--6--|----><--1-->|
+         *  |      CEREAL BAWX  ^     |
+         *  |      BEFORE I GET 7     |
+         *  |      ANGRY!!!     |     |
+         *  |                         |
+         *  |                         |
+         *  |                         |
+         *  |                         |
+         *  |_________________________|
+         */
+          imageY = (verticallyCenterContents) ? rectangle.height/2 - heightOfContents/2 : innerMarginHeight;
+          textY = imageY + imageSize.y + imagePadding;
+
+          // anchor width based on the image only if the image is wider, probably not likely but possible
+          if(imageWider) {
+            imageX = (horizontallyCenterContents) ? rectangle.width/2 - imageSize.x/2 : innerMarginWidth;
+            textX = imageX + imageSize.x/2 - textSize.x/2;
+          } else {
+            textX = (horizontallyCenterContents) ? rectangle.width/2 - textSize.x/2 : innerMarginWidth;
+            imageX = textX + textSize.x/2 - imageSize.x/2;
+          }
+          break;
+      }
+      Point imageOrigin = (image != null) ? new Point(imageX, imageY) : null;
+      Point textOrigin = (text != null) ? new Point(textX, textY) : null;
+      return new ContentOriginSet(imageOrigin, textOrigin);
+    }
+
+    void setSegmentType(SegmentType segmentType) {
+      this.segmentType = segmentType;
+    }
+
+    SegmentType getSegmentType() {
+      return segmentType;
+    }
+
+    void drawText(GC gc, int x, int y) {
+      gc.setFont(defaultFont);
+      gc.setForeground(defaultCurrentFontColor);
+      gc.drawText(text, x, y, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
+    }
+
+
+    int drawImage(GC gc, int x, int y) {
+      if (image == null)
+        return x;
+      gc.drawImage(image, x, y);
+      return x + image.getBounds().width + imagePadding;
+    }
+
+    void drawBackgroundImage(GC gc, Rectangle rect) {
+      if (backgroundImage == null)
+        return;
+
+      Rectangle imgBounds = backgroundImage.getBounds();
+
+      if (backgroundImageStyle == BG_IMAGE_STRETCH) {
+        gc.drawImage(backgroundImage, 0, 0, imgBounds.width, imgBounds.height, rect.x, rect.y, rect.width, rect.height);
+
+      } else if (backgroundImageStyle == BG_IMAGE_CENTER) {
+        int x = (imgBounds.width - rect.width) / 2;
+        int y = (imgBounds.height - rect.height) / 2;
+        Rectangle centerRect = new Rectangle(rect.x, rect.y, rect.width, rect.height);
+        if (x < 0) {
+          centerRect.x -= x;
+          x = 0;
+        }
+        if (y < 0) {
+          centerRect.y -= y;
+          y = 0;
+        }
+        drawClippedImage(gc, backgroundImage, x, y, centerRect);
+
+      } else if (backgroundImageStyle == BG_IMAGE_TILE) {
+        for (int y = 0; y < rect.height; y += imgBounds.height) {
+          Rectangle tileRect = new Rectangle(rect.x, y + rect.y, rect.width, rect.height-y);
+
+          for (int x = 0; x < rect.width; x += imgBounds.width) {
+            tileRect.x += drawClippedImage(gc, backgroundImage, 0, 0, tileRect);
+            tileRect.width -= x;
+          }
+        }
+
+      } else {
+        // default is BG_IMAGE_CROP
+        drawClippedImage(gc, backgroundImage, 0, 0, rect);
+      }
+    }
+
+    int drawClippedImage(GC gc, Image image, int x, int y, Rectangle rect) {
+      if (image != null) {
+        Rectangle imageBounds = image.getBounds();
+        int width = Math.min(imageBounds.width - x, rect.width);
+        int height = Math.min(imageBounds.height - y, rect.height);
+        gc.drawImage(image, x, y, width, height, rect.x, rect.y, width, height);
+        return width;
+      }
+      return 0;
+    }
+
     public void mouseDoubleClick() { }
     public void mouseDown() { }
     public void mouseUp() { }
@@ -1637,7 +1713,7 @@ public class SegmentedSquareButton extends SquareButton {
   /**
    * For convenience
    */
-  protected class ContentOriginSet {
+  protected static class ContentOriginSet {
     protected final Point imageOrigin;
     protected final Point textOrigin;
 
