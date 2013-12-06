@@ -440,6 +440,7 @@ public class SegmentedSquareButton extends Canvas {
     gc.setForeground(this.defaultCurrentColor);
     gc.setBackground(this.defaultCurrentColor2);
 
+
     Rectangle fillRectangle = (roundedCorners) ? new Rectangle(buttonRectangle.x + 1, buttonRectangle.y + 1, buttonRectangle.width - 2, buttonRectangle.height - 3) :
       new Rectangle(buttonRectangle.x + 1, buttonRectangle.y + 1, buttonRectangle.width - 1, buttonRectangle.height - 1);
 
@@ -1403,12 +1404,17 @@ public class SegmentedSquareButton extends Canvas {
     }
 
     Point computeSegmentOrigin(SegmentedSquareButtonItem itemToTheLeft) {
+        return null;
+    }
 
+    Point computeSegmentSize() {
+        return computeSegmentSize(SWT.DEFAULT, SWT.DEFAULT, false);
     }
 
     Point computeSegmentSize(int heightHint) {
       return computeSegmentSize(SWT.DEFAULT, heightHint, false);
     }
+
 
     public Point computeSegmentSize(int widthHint, int heightHint, boolean changed) {
       Point size = null;
@@ -1435,9 +1441,9 @@ public class SegmentedSquareButton extends Canvas {
       return size;
     }
 
-    Point computeTextSize(SegmentedSquareButtonItem item) {
+    Point computeTextSize() {
       Point size = null;
-      if (item.getText() != null) {
+      if (text != null) {
         GC gc = new GC(SegmentedSquareButton.this);
         gc.setFont(defaultFont);
         size = gc.textExtent(text, SWT.DRAW_DELIMITER);
@@ -1446,14 +1452,16 @@ public class SegmentedSquareButton extends Canvas {
       return size;
     }
 
-    Point computeImageSize(SegmentedSquareButtonItem item) {
+    Point computeImageSize() {
       Point size = null;
-      if(item.getImage() != null) {
+      if(image != null) {
         Rectangle imageBounds = image.getBounds();
         size = new Point(imageBounds.width, imageBounds.height);
       }
       return size;
     }
+
+    private int lastWidthOfContents, lastHeightOfContents;
 
     /**
      * for LEFT_OF_TEXT and RIGHT_OF_TEXT
@@ -1463,25 +1471,31 @@ public class SegmentedSquareButton extends Canvas {
      *  widthOfContents = Math.max(image.width, text.width)
      * @return
      */
-    int getWidthOfContents(SegmentedSquareButtonItem item) {
-      int widthOfContents = 0;
+    int getWidthOfContents() {
+      if(lastWidthOfContents == 0) {
+        int widthOfContents = 0;
+        Point textSize = computeTextSize();
+        Point imageSize = computeImageSize();
 
-      Point textSize = computeTextSize(item);
-      Point imageSize = computeImageSize(item);
+        int textWidth = (textSize != null) ? textSize.x : 0;
+        int imageWidth = (imageSize != null) ? imageSize.x : 0;
 
-      int textWidth = (textSize != null) ? textSize.x : 0;
-      int imageWidth = (imageSize != null) ? imageSize.x : 0;
-
-      switch(imagePosition) {
-        case LEFT_OF_TEXT:
-        case RIGHT_OF_TEXT:
-          widthOfContents = imageWidth + imagePadding + textWidth;
-          break;
-        case ABOVE_TEXT:
-          widthOfContents = Math.max(textWidth, imageWidth);
-          break;
+        switch(imagePosition) {
+          case LEFT_OF_TEXT:
+          case RIGHT_OF_TEXT:
+            widthOfContents = imageWidth + imagePadding + textWidth;
+            break;
+          case ABOVE_TEXT:
+            widthOfContents = Math.max(textWidth, imageWidth);
+            break;
+        }
+        lastWidthOfContents = widthOfContents;
       }
-      return widthOfContents;
+      return lastWidthOfContents;
+    }
+
+    static int adjustWidthForSegmentType(int width) {
+
     }
 
     /**
@@ -1493,24 +1507,27 @@ public class SegmentedSquareButton extends Canvas {
      * @return
      */
     int getHeightOfContents(SegmentedSquareButtonItem item) {
-      int heightOfContents = 0;
+      if(lastHeightOfContents == 0) {
+        int heightOfContents = 0;
 
-      Point textSize = computeTextSize();
-      Point imageSize = computeImageSize();
+        Point textSize = computeTextSize();
+        Point imageSize = computeImageSize();
 
-      int textHeight = (textSize != null) ? textSize.y : 0;
-      int imageHeight = (imageSize != null) ? imageSize.y : 0;
+        int textHeight = (textSize != null) ? textSize.y : 0;
+        int imageHeight = (imageSize != null) ? imageSize.y : 0;
 
-      switch(imagePosition) {
-        case LEFT_OF_TEXT:
-        case RIGHT_OF_TEXT:
-          heightOfContents = Math.max(textHeight, imageHeight);
-          break;
-        case ABOVE_TEXT:
-          heightOfContents = imageHeight + imagePadding + textHeight;
-          break;
+        switch(imagePosition) {
+          case LEFT_OF_TEXT:
+          case RIGHT_OF_TEXT:
+            heightOfContents = Math.max(textHeight, imageHeight);
+            break;
+          case ABOVE_TEXT:
+            heightOfContents = imageHeight + imagePadding + textHeight;
+            break;
+        }
+        lastHeightOfContents = heightOfContents;
       }
-      return heightOfContents;
+      return lastHeightOfContents;
     }
 
     ContentOriginSet getContentsOrigin(Rectangle rectangle) {
@@ -1675,6 +1692,11 @@ public class SegmentedSquareButton extends Canvas {
     }
 
     void paintControl(SegmentedSquareButtonItem lastItem, PaintEvent paintEvent) {
+
+        Point segmentSize = computeSize();
+        Rectangle segmentRectangle = new Rectangle(0, 0, segmentSize.x, segmentSize.y);
+
+        GC gc = paintEvent.gc;
 
     }
 
