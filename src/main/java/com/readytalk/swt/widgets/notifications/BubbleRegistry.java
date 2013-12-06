@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
+ * A singleton that keeps track of all Bubble'd items and their (optional) associated tags.<br/>
+ * Users can use this class to Show and Hide Bubbles by tag or just show all the Bubbles.
  */
 public class BubbleRegistry {
 
@@ -27,11 +29,15 @@ public class BubbleRegistry {
     registrants = new ArrayList<BubbleRegistrant>();
   }
 
+  /**
+   * Returns the singleton instance of BubbleRegistry.
+   * @return The instance of BubbleRegistry.
+   */
   public static BubbleRegistry getInstance() {
     return instance;
   }
 
-  public void register(Widget widget, Bubble bubble, BubbleTag ... tags) {
+  void register(Widget widget, Bubble bubble, BubbleTag ... tags) {
     BubbleRegistrant registrant = findRegistrant(widget);
 
     if(registrant == null) {
@@ -43,8 +49,18 @@ public class BubbleRegistry {
     addTags(widget, tags);
   }
 
+  void register(Bubblable bubblable, Bubble bubble, BubbleTag ... tags) {
+    BubbleRegistrant registrant = findRegistrant(bubblable);
 
-  public void addTags(Object target, BubbleTag ... tags) {
+    if(registrant == null) {
+      registrant = new CustomWidgetBubbleRegistrant(bubblable, bubble, tags);
+      registrant.addMouseListener();
+      registrants.add(registrant);
+    }
+  }
+
+
+  void addTags(Object target, BubbleTag ... tags) {
     BubbleRegistrant registrant = findRegistrant(target);
     if(registrant == null) {
       log.warning("Instance of " + target.getClass() + " has not been registered.");
@@ -59,7 +75,7 @@ public class BubbleRegistry {
     }
   }
 
-  public void removeTags(BubbleRegistrant registrant, BubbleTag ... tagsToBeRemoved) {
+  void removeTags(BubbleRegistrant registrant, BubbleTag ... tagsToBeRemoved) {
     registrant.removeTags(tagsToBeRemoved);
     for(BubbleTag tag : tagsToBeRemoved) {
       List<BubbleRegistrant> tagList = getTagList(tag);
@@ -71,8 +87,10 @@ public class BubbleRegistry {
 
   /**
    * Show all bubbles corresponding to list of tags.
+   * It's important to provide a way for users to invoke the <code>dismissBubblesByTags()</code> method
+   * because we disable the auto-hide and "Click-To-Dismiss" feature when this method is invoked.
    *
-   * @param tags
+   * @param tags The tag(s) you want to show the user.
    */
   public void showBubblesByTags(BubbleTag ... tags) {
     for(BubbleTag tag : tags) {
@@ -84,6 +102,13 @@ public class BubbleRegistry {
     }
   }
 
+  /**
+   * Shows all of the Bubbles at once.<br/>
+   * It's important to provide a way for users to invoke the <code>dismissBubblesByTags()</code> method
+   * because we disable the auto-hide and "Click-To-Dismiss" feature when this method is invoked.
+   * Be really sure you want to do this. If you use Bubble for tooltips all over your system, this will
+   * likely overwhelm your users. Also, Bubbles can overlap, so invoke this method at your own risk.
+   */
   public void showAllBubbles() {
     for(BubbleRegistrant registrant : registrants) {
       registrant.bubble.setDisableAutoHide(true);
@@ -93,9 +118,10 @@ public class BubbleRegistry {
 
 
   /**
-   * Dismiss all bubbles corresponding to the list of tags.
+   * Dismiss all bubbles corresponding to the list of tags.<br/>
+   * Remember to invoke this method if you previously invoked <code>showBubblesByTags</code>
    *
-   * @param tags
+   * @param tags The tag(s) you want to dismiss.
    */
   public void dismissBubblesByTag(BubbleTag ... tags) {
     for(BubbleTag tag : tags) {
@@ -107,6 +133,10 @@ public class BubbleRegistry {
     }
   }
 
+  /**
+   * Dismiss all bubbles <br/>
+   * Remember to invoke this method if you previously invoked <code>showAllBubbles</code>
+   */
   public void dismissAllBubbles() {
     for(BubbleRegistrant registrant : registrants) {
       registrant.dismissBubble();
@@ -132,7 +162,7 @@ public class BubbleRegistry {
     return tagList;
   }
 
-  public void unregister(Object target) {
+  void unregister(Object target) {
     BubbleRegistrant registrant = findRegistrant(target);
     if(registrant != null) {
       removeTags(registrant,
@@ -199,7 +229,7 @@ public class BubbleRegistry {
       return widget;
     }
 
-    public void addMouseListener() {
+    void addMouseListener() {
       if (mouseHoverListener == null) {
         mouseHoverListener = new Listener() {
           public void handleEvent(Event event) {
@@ -210,7 +240,7 @@ public class BubbleRegistry {
       if (mouseOutListener == null) {
         mouseOutListener = new Listener() {
           public void handleEvent(Event event) {
-            if(bubble.isDisableAutoHide() != false) {
+            if(bubble.isDisableAutoHide() != true) {
               bubble.fadeOut();
             }
           }
@@ -220,9 +250,43 @@ public class BubbleRegistry {
       widget.addListener(SWT.MouseExit, mouseOutListener);
     }
 
-    public void removeMouseListener() {
+    void removeMouseListener() {
       widget.removeListener(SWT.MouseHover, mouseHoverListener);
       widget.removeListener(SWT.MouseExit, mouseOutListener);
+    }
+  }
+
+  static class CustomWidgetBubbleRegistrant extends BubbleRegistrant {
+    final Bubblable bubblable;
+    Listener mouseTrackListener;
+
+    CustomWidgetBubbleRegistrant(Bubblable bubblable, Bubble bubble, BubbleTag ... tags) {
+      super(bubble, tags);
+      this.bubblable = bubblable;
+    }
+
+    Object getTarget() {
+      return bubblable;
+    }
+
+    void addMouseListener() {
+      if (mouseTrackListener == null) {
+        mouseTrackListener = new Listener() {
+          public void handleEvent(Event event) {
+            if (bubblable.getRectangleArea().contains(event.x, event.y)) {
+              bubble.show();
+            } else if (bubble.isVisible() && !bubble.getIsFadeEffectInProgress() && !bubble.isDisableAutoHide()) {
+              bubble.fadeOut();
+            }
+          }
+        };
+      }
+
+      bubblable.getPaintedElement().addListener(SWT.MouseMove, mouseTrackListener);
+    }
+
+    void removeMouseListener() {
+      bubblable.getPaintedElement().removeListener(SWT.MouseMove, mouseTrackListener);
     }
   }
 }
