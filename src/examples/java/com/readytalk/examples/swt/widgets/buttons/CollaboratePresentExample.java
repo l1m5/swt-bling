@@ -77,7 +77,7 @@ public class CollaboratePresentExample implements SwtBlingExample {
             .build();
     startButton.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false, 2, 1));
 
-    shell.setSize(800, 500);
+    shell.pack();
     shell.open();
   }
 
