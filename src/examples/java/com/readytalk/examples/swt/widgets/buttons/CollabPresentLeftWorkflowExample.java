@@ -13,6 +13,7 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
@@ -27,6 +28,8 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
   @RunnableExample(name = "CollabPresentLeft")
   public CollabPresentLeftWorkflowExample() { }
 
+  private TextPainter presentInfoTextPainter;
+  private TextPainter collabInfoTextPainter;
   private PaintListener presentInfoPaintListener;
   private PaintListener collabInfoPaintListener;
 
@@ -36,8 +39,7 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
   private SquareButton collabButton;
   private Image collabImage;
 
-  private Composite presentationInfo;
-  private Composite collabInfo;
+  private Composite middleComposite;
 
   @Override
   public void run(Display display, Shell shell) {
@@ -50,7 +52,7 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
     gridLayout.marginHeight = 10;
     gridLayout.marginWidth = 10;
     gridLayout.verticalSpacing = 20;
-    gridLayout.horizontalSpacing = 20;
+    gridLayout.horizontalSpacing = 30;
     mainComposite.setLayout(gridLayout);
 
     Font headerFont = FontFactory.getFont(display, 30);
@@ -62,8 +64,13 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
 
     loadImages(display);
     createLeftComposite(mainComposite);
-    presentationInfo = createPresentExplanationComposite(mainComposite);
-    collabInfo = createCollabExplanationComposite(mainComposite);
+
+    middleComposite = createMiddleComposite(mainComposite);
+    presentInfoTextPainter = createPresentInfoTextPainter(middleComposite);
+    collabInfoTextPainter = createCollabInfoTextPainter(middleComposite);
+    setPresentInfoVisible(true);
+
+    createRightComposite(mainComposite);
 
     shell.pack();
     shell.open();
@@ -72,6 +79,49 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
   private void loadImages(Display display) {
     presentImage = new Image(display, "src/examples/resources/images/glyph_present.png");
     collabImage = new Image(display, "src/examples/resources/images/glyph_collab.png");
+  }
+
+  private void setPresentInfoVisible(boolean isVisible) {
+    if (presentInfoPaintListener == null) {
+      presentInfoPaintListener = new PaintListener() {
+        public void paintControl(PaintEvent e) {
+          Rectangle bounds = middleComposite.getBounds();
+          presentInfoTextPainter.setBounds(new Rectangle(0, 0, bounds.width, bounds.height));
+
+          presentInfoTextPainter.handlePaint(e);
+        }
+      };
+    }
+
+    if (isVisible) {
+      setCollabInfoVisible(false);
+      middleComposite.addPaintListener(presentInfoPaintListener);
+      middleComposite.redraw();
+    } else {
+      middleComposite.removePaintListener(presentInfoPaintListener);
+    }
+  }
+
+  private void setCollabInfoVisible(boolean isVisible) {
+    if (collabInfoPaintListener == null) {
+      collabInfoPaintListener = new PaintListener() {
+        public void paintControl(PaintEvent e) {
+          Rectangle bounds = middleComposite.getBounds();
+
+          collabInfoTextPainter.setBounds(new Rectangle(0, 0, bounds.width, bounds.height));
+
+          collabInfoTextPainter.handlePaint(e);
+        }
+      };
+    }
+
+    if (isVisible) {
+      setPresentInfoVisible(false);
+      middleComposite.addPaintListener(collabInfoPaintListener);
+      middleComposite.redraw();
+    } else {
+      middleComposite.removePaintListener(collabInfoPaintListener);
+    }
   }
 
   private void createLeftComposite(Composite parentComposite) {
@@ -89,8 +139,7 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
             .build();
     presentButton.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
-        collabInfo.setVisible(false);
-        presentationInfo.setVisible(true);
+        setPresentInfoVisible(true);
       }
     });
     presentButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
@@ -104,57 +153,60 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
             .build();
     collabButton.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
-        presentationInfo.setVisible(false);
-        collabInfo.setVisible(true);
+        setCollabInfoVisible(true);
       }
     });
     collabButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
   }
 
-  private Composite createPresentExplanationComposite(Composite parentComposite) {
-    Composite presentationInfoComposite = new Composite(parentComposite, SWT.NONE);
+  private Composite createMiddleComposite(Composite parentComposite) {
+    Composite middleComposite = new Composite(parentComposite, SWT.NONE);
+    middleComposite.setLayout(new GridLayout());
+    GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
+    data.minimumWidth = 500;
+    middleComposite.setLayoutData(data);
+
+    return middleComposite;
+  }
+
+  private TextPainter createPresentInfoTextPainter(Composite parentComposite) {
     String presentationExplanation = "'''Presentation Mode (Traditional)'''\n" +
-            " - Participants will join using the Adobe Flash participant client ('''faster entry''' to conference)\n" +
+            " - Participants will join using the Adobe Flash client\n" +
             " - Great for a '''one-to-many''' presentation\n" +
             " - Participants can '''view screenshare''', but '''cannot share their screen''' ";
 
-    presentationInfoComposite = wireTextPainterToComposite(presentationInfoComposite, presentationExplanation);
-
-    return presentationInfoComposite;
+    return createTextPainterForString(parentComposite, presentationExplanation);
   }
 
-  private Composite createCollabExplanationComposite(Composite parentComposite) {
-    Composite collabInfoComposite = new Composite(parentComposite, SWT.NONE);
+  private TextPainter createCollabInfoTextPainter(Composite parentComposite) {
     String collabExplanation = "'''Collaboration Mode (New!)'''\n" +
             " - All participants see the '''full-featured''' client\n" +
             " - Great for '''smaller''', collaborative meetings\n" +
             " - Participants can '''view screenshare''' and '''share their screen'''";
 
-    collabInfoComposite = wireTextPainterToComposite(collabInfoComposite, collabExplanation);
-
-    return collabInfoComposite;
+    return createTextPainterForString(parentComposite, collabExplanation);
   }
 
-  private Composite wireTextPainterToComposite(final Composite composite, String text) {
-    composite.setLayout(new GridLayout());
-    composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-
-    final TextPainter textPainter = new TextPainter(composite)
+  private TextPainter createTextPainterForString(final Composite composite, String text) {
+    return new TextPainter(composite)
             .setTokenizer(TextTokenizerFactory.createTextTokenizer(TextTokenizerType.FORMATTED))
             .setText(text);
+  }
 
-    composite.addPaintListener(new PaintListener() {
-      public void paintControl(PaintEvent e) {
-        // TODO: improvement is desirable here
-        Rectangle bounds = composite.getBounds();
-        textPainter.setBounds(new Rectangle(0, 0, bounds.width, bounds.height));
+  private void createRightComposite(final Composite parentComposite) {
+    Composite rightComposite = new Composite(parentComposite, SWT.NONE);
+    rightComposite.setLayout(new GridLayout());
+    rightComposite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 
-        textPainter.handlePaint(e);
+    SquareButton startButton = new SquareButton.SquareButtonBuilder()
+            .setParent(rightComposite)
+            .setText("Start")
+            .build();
+    startButton.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+//        parentComposite.getShell().close();
       }
     });
-
-    composite.setVisible(false);
-
-    return composite;
   }
 }
