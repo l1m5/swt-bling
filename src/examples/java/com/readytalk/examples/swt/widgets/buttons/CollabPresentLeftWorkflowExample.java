@@ -96,10 +96,11 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
     if (isVisible) {
       setCollabInfoVisible(false);
       middleComposite.addPaintListener(presentInfoPaintListener);
-      middleComposite.redraw();
     } else {
       middleComposite.removePaintListener(presentInfoPaintListener);
     }
+
+    middleComposite.redraw();
   }
 
   private void setCollabInfoVisible(boolean isVisible) {
@@ -118,10 +119,11 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
     if (isVisible) {
       setPresentInfoVisible(false);
       middleComposite.addPaintListener(collabInfoPaintListener);
-      middleComposite.redraw();
     } else {
       middleComposite.removePaintListener(collabInfoPaintListener);
     }
+
+    middleComposite.redraw();
   }
 
   private void createLeftComposite(Composite parentComposite) {
