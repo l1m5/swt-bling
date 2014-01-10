@@ -17,6 +17,9 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -52,7 +55,7 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
     gridLayout.makeColumnsEqualWidth = false;
     gridLayout.numColumns = 2;
     gridLayout.marginHeight = 10;
-    gridLayout.marginWidth = 10;
+    gridLayout.marginWidth = 60;
     gridLayout.verticalSpacing = 20;
     gridLayout.horizontalSpacing = 30;
     mainComposite.setLayout(gridLayout);
@@ -229,10 +232,9 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
 
   private void createStartCancelComposite(final Composite parentComposite, Font buttonFont) {
     // TODO: If we were to use this, we should use a CustomActionCancelButton builder here (to flip the buttons per OS)
-
     Composite rightComposite = new Composite(parentComposite, SWT.NONE);
-    rightComposite.setLayout(new GridLayout());
     rightComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+    rightComposite.setLayout(new FormLayout());
 
     SquareButton cancelButton = new SquareButton.SquareButtonBuilder()
             .setParent(rightComposite)
@@ -244,7 +246,6 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
 
       }
     });
-    cancelButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
 //    BootStrap Primary Button Color Scheme
 //    SquareButton.SquareButtonColorGroup startButtonColorGroup = new SquareButton.SquareButtonColorGroup(
@@ -275,8 +276,14 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
       }
     });
 
-    GridData data = new GridData(SWT.RIGHT, SWT.FILL, true, false);
-    data.minimumWidth = 125;
+
+    FormData data = new FormData();
+    data.right = new FormAttachment(100);
+    data.width = 125;
     startButton.setLayoutData(data);
+
+    data = new FormData();
+    data.right = new FormAttachment(startButton, -20);
+    cancelButton.setLayoutData(data);
   }
 }
