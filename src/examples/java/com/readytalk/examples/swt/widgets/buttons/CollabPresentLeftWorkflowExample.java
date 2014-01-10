@@ -29,9 +29,10 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
 
   private TextPainter presentInfoTextPainter;
   private TextPainter collabInfoTextPainter;
-  private TextPainter currentTextPainter;
   private PaintListener presentInfoPaintListener;
   private PaintListener collabInfoPaintListener;
+
+  private SquareButton currentButtonSelected;
 
   private SquareButton presentButton;
   private Image presentImage;
@@ -68,7 +69,8 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
     descriptionComposite = createMiddleComposite(mainComposite);
     presentInfoTextPainter = createPresentInfoTextPainter(descriptionComposite);
     collabInfoTextPainter = createCollabInfoTextPainter(descriptionComposite);
-    setPresentInfoVisible(true);
+
+    togglePresentInfo();
 
     createStartComposite(mainComposite);
 
@@ -93,13 +95,10 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
       };
     }
 
-    if (isVisible && currentTextPainter != presentInfoTextPainter) {
+    if (isVisible) {
       setCollabInfoVisible(false);
       descriptionComposite.addPaintListener(presentInfoPaintListener);
-      currentTextPainter = presentInfoTextPainter;
-    }
-
-    if (!isVisible) {
+    } else {
       descriptionComposite.removePaintListener(presentInfoPaintListener);
     }
 
@@ -119,13 +118,10 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
       };
     }
 
-    if (isVisible && currentTextPainter != collabInfoTextPainter) {
+    if (isVisible) {
       setPresentInfoVisible(false);
       descriptionComposite.addPaintListener(collabInfoPaintListener);
-      currentTextPainter = collabInfoTextPainter;
-    }
-
-    if (!isVisible) {
+    } else {
       descriptionComposite.removePaintListener(collabInfoPaintListener);
     }
 
@@ -144,11 +140,14 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
             .setImage(presentImage)
             .setImagePosition(SquareButton.ImagePosition.LEFT_OF_TEXT)
             .setHorizontallyCenterContents(false)
+            .setToggleable(true)
             .setText("Present")
             .build();
     presentButton.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
-        setPresentInfoVisible(true);
+        if (presentButton.isToggled() && currentButtonSelected != presentButton) {
+          togglePresentInfo();
+        }
       }
     });
     presentButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
@@ -158,14 +157,31 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
             .setImage(collabImage)
             .setImagePosition(SquareButton.ImagePosition.LEFT_OF_TEXT)
             .setHorizontallyCenterContents(false)
+            .setToggleable(true)
             .setText("Collaborate")
             .build();
     collabButton.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
-        setCollabInfoVisible(true);
+        if (collabButton.isToggled() && currentButtonSelected != collabButton) {
+          toggleCollabInfo();
+        }
       }
     });
     collabButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+  }
+
+  private void togglePresentInfo() {
+    currentButtonSelected = presentButton;
+    collabButton.setToggled(false);
+    presentButton.setToggled(true);
+    setPresentInfoVisible(true);
+  }
+
+  private void toggleCollabInfo() {
+    currentButtonSelected = collabButton;
+    presentButton.setToggled(false);
+    collabButton.setToggled(true);
+    setCollabInfoVisible(true);
   }
 
   private Composite createMiddleComposite(Composite parentComposite) {
