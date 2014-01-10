@@ -275,6 +275,7 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
             .setText("Start")
             .setFont(buttonFont)
             .setDefaultColors(defaultStartButtonColors)
+            .setSelectedColors(defaultStartButtonColors)
             .setHoverColors(hoverStartButtonColors)
             .build();
     startButton.addSelectionListener(new SelectionAdapter() {
