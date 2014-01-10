@@ -65,15 +65,18 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
     header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 
     loadImages(display);
-    createMeetingTypeComposite(mainComposite);
+
+    Font buttonFont = FontFactory.getFont(16, SWT.NORMAL);
+    createMeetingTypeComposite(mainComposite, buttonFont);
 
     descriptionComposite = createMiddleComposite(mainComposite);
+
     presentInfoTextPainter = createPresentInfoTextPainter(descriptionComposite);
     collabInfoTextPainter = createCollabInfoTextPainter(descriptionComposite);
 
     togglePresentInfo();
 
-    createStartComposite(mainComposite);
+    createStartCancelComposite(mainComposite, buttonFont);
 
     shell.pack();
     shell.open();
@@ -129,7 +132,7 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
     descriptionComposite.redraw();
   }
 
-  private void createMeetingTypeComposite(Composite parentComposite) {
+  private void createMeetingTypeComposite(Composite parentComposite, Font buttonFont) {
     Composite leftComposite = new Composite(parentComposite, SWT.NONE);
     GridLayout gridLayout = new GridLayout();
     gridLayout.marginHeight = 100;
@@ -146,6 +149,7 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
             .setHorizontallyCenterContents(false)
             .setToggleable(true)
             .setText("Present")
+            .setFont(buttonFont)
             .build();
     presentButton.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
@@ -163,6 +167,7 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
             .setHorizontallyCenterContents(false)
             .setToggleable(true)
             .setText("Collaborate")
+            .setFont(buttonFont)
             .build();
     collabButton.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
@@ -222,12 +227,24 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
             .setText(text);
   }
 
-  private void createStartComposite(final Composite parentComposite) {
+  private void createStartCancelComposite(final Composite parentComposite, Font buttonFont) {
     // TODO: If we were to use this, we should use a CustomActionCancelButton builder here (to flip the buttons per OS)
 
     Composite rightComposite = new Composite(parentComposite, SWT.NONE);
     rightComposite.setLayout(new GridLayout());
     rightComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+
+    SquareButton cancelButton = new SquareButton.SquareButtonBuilder()
+            .setParent(rightComposite)
+            .setText("Cancel")
+            .build();
+    cancelButton.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+
+      }
+    });
+    cancelButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
 //    BootStrap Primary Button Color Scheme
 //    SquareButton.SquareButtonColorGroup startButtonColorGroup = new SquareButton.SquareButtonColorGroup(
@@ -248,12 +265,13 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
     SquareButton startButton = new SquareButton.SquareButtonBuilder()
             .setParent(rightComposite)
             .setText("Start")
+            .setFont(buttonFont)
             .setDefaultColors(startButtonColorGroup)
             .build();
     startButton.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
-//        parentComposite.getShell().close();
+
       }
     });
 
