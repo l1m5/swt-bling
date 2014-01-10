@@ -256,10 +256,17 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
 //    );
 
 //    BootStrap Success Button Color Scheme
-    SquareButton.SquareButtonColorGroup startButtonColorGroup = new SquareButton.SquareButtonColorGroup(
+    SquareButton.SquareButtonColorGroup defaultStartButtonColors = new SquareButton.SquareButtonColorGroup(
             ColorFactory.getColor(92, 184, 92),
             ColorFactory.getColor(92, 184, 92),
             ColorFactory.getColor(76, 174, 76),
+            ColorFactory.getColor(255, 255, 255)
+    );
+
+    SquareButton.SquareButtonColorGroup hoverStartButtonColors = new SquareButton.SquareButtonColorGroup(
+            ColorFactory.getColor(71, 164, 71),
+            ColorFactory.getColor(71, 164, 71),
+            ColorFactory.getColor(57, 132, 57),
             ColorFactory.getColor(255, 255, 255)
     );
 
@@ -267,7 +274,8 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
             .setParent(rightComposite)
             .setText("Start")
             .setFont(buttonFont)
-            .setDefaultColors(startButtonColorGroup)
+            .setDefaultColors(defaultStartButtonColors)
+            .setHoverColors(hoverStartButtonColors)
             .build();
     startButton.addSelectionListener(new SelectionAdapter() {
       @Override
