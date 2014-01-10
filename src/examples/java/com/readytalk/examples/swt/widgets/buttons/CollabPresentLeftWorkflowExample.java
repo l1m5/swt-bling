@@ -5,6 +5,7 @@ import com.readytalk.examples.swt.SwtBlingExample;
 import com.readytalk.swt.text.painter.TextPainter;
 import com.readytalk.swt.text.tokenizer.TextTokenizerFactory;
 import com.readytalk.swt.text.tokenizer.TextTokenizerType;
+import com.readytalk.swt.util.ColorFactory;
 import com.readytalk.swt.util.FontFactory;
 import com.readytalk.swt.widgets.buttons.SquareButton;
 import org.eclipse.swt.SWT;
@@ -135,6 +136,9 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
     gridLayout.verticalSpacing = 50;
     leftComposite.setLayout(gridLayout);
 
+
+    GridData data = new GridData(SWT.FILL, SWT.FILL, true, false);
+    data.minimumWidth = 200;
     presentButton = new SquareButton.SquareButtonBuilder()
             .setParent(leftComposite)
             .setImage(presentImage)
@@ -150,7 +154,7 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
         }
       }
     });
-    presentButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+    presentButton.setLayoutData(data);
 
     collabButton = new SquareButton.SquareButtonBuilder()
             .setParent(leftComposite)
@@ -167,7 +171,7 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
         }
       }
     });
-    collabButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+    collabButton.setLayoutData(data);
   }
 
   private void togglePresentInfo() {
@@ -219,13 +223,32 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
   }
 
   private void createStartComposite(final Composite parentComposite) {
+    // TODO: If we were to use this, we should use a CustomActionCancelButton builder here (to flip the buttons per OS)
+
     Composite rightComposite = new Composite(parentComposite, SWT.NONE);
     rightComposite.setLayout(new GridLayout());
-    rightComposite.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, true, 2, 1));
+    rightComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+
+//    BootStrap Primary Button Color Scheme
+//    SquareButton.SquareButtonColorGroup startButtonColorGroup = new SquareButton.SquareButtonColorGroup(
+//            ColorFactory.getColor(66, 139, 202),
+//            ColorFactory.getColor(66, 139, 202),
+//            ColorFactory.getColor(53, 126, 189),
+//            ColorFactory.getColor(255, 255, 255)
+//    );
+
+//    BootStrap Success Button Color Scheme
+    SquareButton.SquareButtonColorGroup startButtonColorGroup = new SquareButton.SquareButtonColorGroup(
+            ColorFactory.getColor(92, 184, 92),
+            ColorFactory.getColor(92, 184, 92),
+            ColorFactory.getColor(76, 174, 76),
+            ColorFactory.getColor(255, 255, 255)
+    );
 
     SquareButton startButton = new SquareButton.SquareButtonBuilder()
             .setParent(rightComposite)
             .setText("Start")
+            .setDefaultColors(startButtonColorGroup)
             .build();
     startButton.addSelectionListener(new SelectionAdapter() {
       @Override
@@ -233,5 +256,9 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
 //        parentComposite.getShell().close();
       }
     });
+
+    GridData data = new GridData(SWT.RIGHT, SWT.FILL, true, false);
+    data.minimumWidth = 125;
+    startButton.setLayoutData(data);
   }
 }
