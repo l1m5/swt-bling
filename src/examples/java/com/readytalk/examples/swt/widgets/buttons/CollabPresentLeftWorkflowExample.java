@@ -43,8 +43,11 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
 
   private SquareButton collabButton;
   private Image collabImage;
+  private Image collabImageLarge;
+  private Image presentImageLarge;
 
-  private Composite descriptionComposite;
+  private Composite textPainterComposite;
+  private Label infoImage;
 
   @Override
   public void run(Display display, Shell shell) {
@@ -71,12 +74,7 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
 
     Font buttonFont = FontFactory.getFont(16, SWT.NORMAL);
     createMeetingTypeComposite(mainComposite, buttonFont);
-
-    descriptionComposite = createMiddleComposite(mainComposite);
-
-    presentInfoTextPainter = createPresentInfoTextPainter(descriptionComposite);
-    collabInfoTextPainter = createCollabInfoTextPainter(descriptionComposite);
-
+    createInfoComposite(mainComposite);
     togglePresentInfo();
 
     createStartCancelComposite(mainComposite, buttonFont);
@@ -88,13 +86,15 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
   private void loadImages(Display display) {
     presentImage = new Image(display, "src/examples/resources/images/glyph_present.png");
     collabImage = new Image(display, "src/examples/resources/images/glyph_collab.png");
+    collabImageLarge = new Image(display, "src/examples/resources/images/glyph_collab-large.png");
+    presentImageLarge = new Image(display, "src/examples/resources/images/glyph_present-large.png");
   }
 
   private void setPresentInfoVisible(boolean isVisible) {
     if (presentInfoPaintListener == null) {
       presentInfoPaintListener = new PaintListener() {
         public void paintControl(PaintEvent e) {
-          Rectangle bounds = descriptionComposite.getBounds();
+          Rectangle bounds = textPainterComposite.getBounds();
           presentInfoTextPainter.setBounds(new Rectangle(0, 0, bounds.width, bounds.height));
 
           presentInfoTextPainter.handlePaint(e);
@@ -104,19 +104,20 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
 
     if (isVisible) {
       setCollabInfoVisible(false);
-      descriptionComposite.addPaintListener(presentInfoPaintListener);
+      infoImage.setImage(presentImageLarge);
+      textPainterComposite.addPaintListener(presentInfoPaintListener);
     } else {
-      descriptionComposite.removePaintListener(presentInfoPaintListener);
+      textPainterComposite.removePaintListener(presentInfoPaintListener);
     }
 
-    descriptionComposite.redraw();
+    textPainterComposite.redraw();
   }
 
   private void setCollabInfoVisible(boolean isVisible) {
     if (collabInfoPaintListener == null) {
       collabInfoPaintListener = new PaintListener() {
         public void paintControl(PaintEvent e) {
-          Rectangle bounds = descriptionComposite.getBounds();
+          Rectangle bounds = textPainterComposite.getBounds();
 
           collabInfoTextPainter.setBounds(new Rectangle(0, 0, bounds.width, bounds.height));
 
@@ -127,12 +128,13 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
 
     if (isVisible) {
       setPresentInfoVisible(false);
-      descriptionComposite.addPaintListener(collabInfoPaintListener);
+      infoImage.setImage(collabImageLarge);
+      textPainterComposite.addPaintListener(collabInfoPaintListener);
     } else {
-      descriptionComposite.removePaintListener(collabInfoPaintListener);
+      textPainterComposite.removePaintListener(collabInfoPaintListener);
     }
 
-    descriptionComposite.redraw();
+    textPainterComposite.redraw();
   }
 
   private void createMeetingTypeComposite(Composite parentComposite, Font buttonFont) {
@@ -196,14 +198,31 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
     setCollabInfoVisible(true);
   }
 
-  private Composite createMiddleComposite(Composite parentComposite) {
-    Composite middleComposite = new Composite(parentComposite, SWT.NONE);
-    middleComposite.setLayout(new GridLayout());
-    GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
-    data.minimumWidth = 500;
-    middleComposite.setLayoutData(data);
+  private void createInfoComposite(Composite parentComposite) {
+    Composite infoComposite = new Composite(parentComposite, SWT.NONE);
+    infoComposite.setLayout(new FormLayout());
+    GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
+    gridData.minimumWidth = 500;
+    infoComposite.setLayoutData(gridData);
 
-    return middleComposite;
+    infoImage = new Label(infoComposite, SWT.NONE);
+
+    FormData formData = new FormData();
+    formData.left = new FormAttachment(20);
+    formData.top = new FormAttachment(10);
+    infoImage.setLayoutData(formData);
+
+    textPainterComposite = new Composite(infoComposite, SWT.NONE);
+    textPainterComposite.setLayout(new FillLayout());
+    formData = new FormData();
+    formData.top = new FormAttachment(infoImage, 10);
+    formData.left = new FormAttachment(0);
+    formData.right = new FormAttachment(100);
+    formData.bottom = new FormAttachment(100);
+    textPainterComposite.setLayoutData(formData);
+
+    presentInfoTextPainter = createPresentInfoTextPainter(textPainterComposite);
+    collabInfoTextPainter = createCollabInfoTextPainter(textPainterComposite);
   }
 
   private TextPainter createPresentInfoTextPainter(Composite parentComposite) {
