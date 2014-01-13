@@ -31,6 +31,9 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
   @RunnableExample(name = "CollabPresentLeft")
   public CollabPresentLeftWorkflowExample() { }
 
+  private static final int TEXT_LEFT_BORDER = 50;
+  private static final int TEXT_PADDING_WIDTH_REDUCER = 100;
+
   private TextPainter presentInfoTextPainter;
   private TextPainter collabInfoTextPainter;
   private PaintListener presentInfoPaintListener;
@@ -57,7 +60,7 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
     GridLayout gridLayout = new GridLayout();
     gridLayout.makeColumnsEqualWidth = false;
     gridLayout.numColumns = 2;
-    gridLayout.marginHeight = 10;
+    gridLayout.marginHeight = 20;
     gridLayout.marginWidth = 60;
     gridLayout.verticalSpacing = 20;
     gridLayout.horizontalSpacing = 30;
@@ -95,7 +98,7 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
       presentInfoPaintListener = new PaintListener() {
         public void paintControl(PaintEvent e) {
           Rectangle bounds = textPainterComposite.getBounds();
-          presentInfoTextPainter.setBounds(new Rectangle(0, 0, bounds.width, bounds.height));
+          presentInfoTextPainter.setBounds(new Rectangle(TEXT_LEFT_BORDER, 0, bounds.width - TEXT_PADDING_WIDTH_REDUCER, bounds.height));
 
           presentInfoTextPainter.handlePaint(e);
         }
@@ -119,7 +122,7 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
         public void paintControl(PaintEvent e) {
           Rectangle bounds = textPainterComposite.getBounds();
 
-          collabInfoTextPainter.setBounds(new Rectangle(0, 0, bounds.width, bounds.height));
+          collabInfoTextPainter.setBounds(new Rectangle(TEXT_LEFT_BORDER, 0, bounds.width - TEXT_PADDING_WIDTH_REDUCER, bounds.height));
 
           collabInfoTextPainter.handlePaint(e);
         }
@@ -226,26 +229,33 @@ public class CollabPresentLeftWorkflowExample implements SwtBlingExample {
   }
 
   private TextPainter createPresentInfoTextPainter(Composite parentComposite) {
-    String presentationExplanation = "'''Presentation Mode (Traditional)'''\n" +
-            " - Participants will join using the Adobe Flash client\n" +
-            " - Great for a '''one-to-many''' presentation\n" +
-            " - Participants can '''view screenshare''', but '''cannot share their screen''' ";
+//    String presentationExplanation = "'''Presentation Mode (Traditional)'''\n" +
+//            " - Participants will join using the Adobe Flash client\n" +
+//            " - Great for a '''one-to-many''' presentation\n" +
+//            " - Participants can '''view screenshare''', but '''cannot share their screen''' ";
+    String presentationExplanation = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, " +
+            "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 
-    return createTextPainterForString(parentComposite, presentationExplanation);
+    return createTextPainterForString(parentComposite, presentationExplanation, SWT.CENTER);
   }
 
   private TextPainter createCollabInfoTextPainter(Composite parentComposite) {
-    String collabExplanation = "'''Collaboration Mode (New!)'''\n" +
-            " - All participants see the '''full-featured''' client\n" +
-            " - Great for '''smaller''', collaborative meetings\n" +
-            " - Participants can '''view screenshare''' and '''share their screen'''";
+//    String collabExplanation = "'''Collaboration Mode (New!)'''\n" +
+//            " - All participants see the '''full-featured''' client\n" +
+//            " - Great for '''smaller''', collaborative meetings\n" +
+//            " - Participants can '''view screenshare''' and '''share their screen'''";
+    String collabExplanation = "Lorem ipsum dolor sit amet!\n \n" +
+              " - sed do eiusmod tempor incididunt ut labore\n" +
+              " - ut labore et dolore magna aliqua\n" +
+              " - consectetur adipisicing elit";
 
-    return createTextPainterForString(parentComposite, collabExplanation);
+    return createTextPainterForString(parentComposite, collabExplanation, SWT.LEFT);
   }
 
-  private TextPainter createTextPainterForString(final Composite composite, String text) {
+  private TextPainter createTextPainterForString(final Composite composite, String text, int justification) {
     return new TextPainter(composite)
             .setTokenizer(TextTokenizerFactory.createTextTokenizer(TextTokenizerType.FORMATTED))
+            .setJustification(justification)
             .setText(text);
   }
 
