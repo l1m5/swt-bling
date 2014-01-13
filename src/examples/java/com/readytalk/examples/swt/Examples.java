@@ -44,7 +44,10 @@ public class Examples {
       if (annotation.name().equals(exampleToRun)) {
         try {
           Display display = createDisplay(debug);
-          Shell exampleShell = new Shell(display);
+
+          // Disable Shell resize
+          Shell exampleShell = new Shell(display, SWT.CLOSE | SWT.TITLE | SWT.BORDER | SWT.APPLICATION_MODAL | SWT.MIN);
+
           SwtBlingExample example = (SwtBlingExample) constructor.newInstance();
           exampleShell.addListener(SWT.Dispose, new Listener() {
             public void handleEvent(Event event) {
