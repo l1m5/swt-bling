@@ -158,7 +158,7 @@ public class CollabPresentTopDownWorkflowExample implements SwtBlingExample {
   private void createMeetingTypeComposite(Composite parentComposite, Font buttonFont) {
     meetingTypeComposite = new Composite(parentComposite, SWT.NONE);
 
-    GridLayout gridLayout = new GridLayout(2, false);
+    GridLayout gridLayout = new GridLayout(4, false);
     gridLayout.horizontalSpacing = SPACE_BETWEEN_PRESENT_COLLAB_BUTTONS;
     meetingTypeComposite.setLayout(gridLayout);
 
@@ -167,6 +167,9 @@ public class CollabPresentTopDownWorkflowExample implements SwtBlingExample {
     formData.left = new FormAttachment(0);
     formData.right = new FormAttachment(100);
     meetingTypeComposite.setLayoutData(formData);
+
+    Label leftSeparator = new Label(meetingTypeComposite, SWT.SEPARATOR | SWT.HORIZONTAL);
+    leftSeparator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
     GridData data = new GridData(SWT.FILL, SWT.FILL, true, false);
     data.minimumWidth = 200;
@@ -205,6 +208,9 @@ public class CollabPresentTopDownWorkflowExample implements SwtBlingExample {
       }
     });
     collabButton.setLayoutData(data);
+
+    Label rightSeparator = new Label(meetingTypeComposite, SWT.SEPARATOR | SWT.HORIZONTAL);
+    rightSeparator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
   }
 
   private void togglePresentInfo() {
