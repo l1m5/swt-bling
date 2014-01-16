@@ -61,14 +61,9 @@ public class CollabPresentTopDownWorkflowExample implements SwtBlingExample {
   @Override
   public void run(Display display, Shell shell) {
     shell.setLayout(new FillLayout());
-    Composite mainComposite = new Composite(shell, SWT.NONE);
 
-    FormLayout formLayout = new FormLayout();
-    formLayout.marginWidth = 60;
-    formLayout.marginHeight = 20;
-    formLayout.spacing = 20;
+    Composite mainComposite = createMainComposite(shell);
 
-    mainComposite.setLayout(formLayout);
     loadImages(display);
 
     createHeader(mainComposite);
@@ -82,6 +77,18 @@ public class CollabPresentTopDownWorkflowExample implements SwtBlingExample {
 
     shell.pack();
     shell.open();
+  }
+
+  private Composite createMainComposite(Shell shell) {
+    Composite mainComposite = new Composite(shell, SWT.NONE);
+
+    FormLayout formLayout = new FormLayout();
+    formLayout.marginWidth = 60;
+    formLayout.marginHeight = 20;
+    formLayout.spacing = 20;
+
+    mainComposite.setLayout(formLayout);
+    return mainComposite;
   }
 
   private void createHeader(Composite parentComposite) {
