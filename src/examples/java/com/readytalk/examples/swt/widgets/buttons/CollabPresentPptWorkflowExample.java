@@ -38,7 +38,6 @@ public class CollabPresentPptWorkflowExample implements SwtBlingExample {
   private static final Font HEADER_FONT = FontFactory.getFont(Display.getDefault(), 30);
   private static final int MARGIN_BELOW_HEADER = 0;
   private static final int SPACING = 20;
-  private static final Color INFO_COMPOSITE_COLOR = ColorFactory.getColor(200, 200, 200);
 
   private TextPainter presentInfoTextPainter;
   private TextPainter collabInfoTextPainter;
@@ -176,10 +175,8 @@ public class CollabPresentPptWorkflowExample implements SwtBlingExample {
     infoComposite.setLayoutData(formData);
 
     infoComposite.setLayout(new FormLayout());
-    infoComposite.setBackground(INFO_COMPOSITE_COLOR);
 
     Composite infoImageComposite = new Composite(infoComposite, SWT.NONE);
-    infoImageComposite.setBackground(INFO_COMPOSITE_COLOR);
     formData = new FormData();
     formData.top = new FormAttachment(0);
     formData.left = new FormAttachment(0);
@@ -192,7 +189,6 @@ public class CollabPresentPptWorkflowExample implements SwtBlingExample {
     infoImage.setLayoutData(gridData);
 
     textPainterComposite = new Composite(infoComposite, SWT.NONE);
-    textPainterComposite.setBackground(INFO_COMPOSITE_COLOR);
     textPainterComposite.setLayout(new FillLayout());
     formData = new FormData();
     formData.top = new FormAttachment(infoImageComposite, 10);
@@ -307,7 +303,6 @@ public class CollabPresentPptWorkflowExample implements SwtBlingExample {
   private void createStartCancelComposite(final Composite parentComposite, Font buttonFont) {
     // TODO: If we were to use this, we should use a CustomActionCancelButton builder here (to flip the buttons per OS)
     Composite startCancelComposite = new Composite(parentComposite, SWT.NONE);
-    startCancelComposite.setBackground(INFO_COMPOSITE_COLOR);
 
     FormData formData = new FormData();
     formData.top = new FormAttachment(textPainterComposite);
