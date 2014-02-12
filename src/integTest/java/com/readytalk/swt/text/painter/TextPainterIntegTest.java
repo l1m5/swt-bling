@@ -1,7 +1,11 @@
 package com.readytalk.swt.text.painter;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,6 +46,22 @@ public class TextPainterIntegTest {
     TextTokenizer tokenizer = TextTokenizerFactory.createTextTokenizer(TextTokenizerType.WIKI);
     painter.setTokenizer(tokenizer).setText(WIKI_TEXT);
     assertEquals(7, painter.getTokens().size());
+  }
+
+  @Test
+  public void precomputeSize_leftAlignedLatinText_doesNotReturn0() {
+    String presentationExplanation = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, " +
+            "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+    Composite composite = new Composite(shell, SWT.NONE);
+
+    TextPainter textPainter = new TextPainter(composite)
+            .setTokenizer(TextTokenizerFactory.createTextTokenizer(TextTokenizerType.FORMATTED))
+            .setJustification(SWT.LEFT)
+            .setText(presentationExplanation);
+
+    GC gc = new GC(shell.getDisplay());
+
+    assertNotEquals(0, textPainter.precomputeSize(gc).width);
   }
   
 }
